@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-waiting { background: #f1f5f9; color: #64748b; }
+        .status-writing { background: #f3e8ff; color: #7c3aed; }
+        .status-delivered { background: #d1fae5; color: #059669; }
+        .status-settled { background: #d1fae5; color: #047857; }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 登录注册页面 -->
+    <div id="authPage" class="min-h-screen gradient-bg flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-fade-in">
+            <!-- 登录表单 -->
+            <div id="loginForm">
+                <div class="text-center mb-8">
+                    <i class="bi bi-kanban text-5xl text-indigo-600 mb-4"></i>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">项目管理系统</h1>
+                    <p class="text-gray-600">登录到您的账户</p>
+                </div>
+
+                <form class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                        <input type="text" id="loginUsername" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="请输入用户名" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                        <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="请输入密码" required>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-600">记住我</span>
+                        </label>
+                        <a href="#" class="text-sm text-indigo-600 hover:text-indigo-500">忘记密码？</a>
+                    </div>
+
+                    <button type="button" onclick="handleLogin()" class="w-full btn-primary text-white py-3 px-4 rounded-lg font-medium">
+                        登录
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600">还没有账户？
+                        <button onclick="showRegister()" class="text-indigo-600 hover:text-indigo-500 font-medium">立即注册</button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="registerForm" style="display: none;">
+                <div class="text-center mb-8">
+                    <i class="bi bi-person-plus text-5xl text-indigo-600 mb-4"></i>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">创建账户</h1>
+                    <p class="text-gray-600">加入我们的项目管理平台</p>
+                </div>
+
+                <form class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                        <input type="text" id="registerUsername" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="请输入用户名" required>
+                    </div>
+
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">角色</label>
+                        <select id="registerRole" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
+                            <option value="">选择角色</option>
+                            <option value="superadmin">超级管理员</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                        <input type="password" id="registerPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="请输入密码" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">确认密码</label>
+                        <input type="password" id="confirmPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="请再次输入密码" required>
+                    </div>
+
+                    <button type="button" onclick="handleRegister()" class="w-full btn-primary text-white py-3 px-4 rounded-lg font-medium">
+                        注册账户
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600">已有账户？
+                        <button onclick="showLogin()" class="text-indigo-600 hover:text-indigo-500 font-medium">立即登录</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainPage" style="display: none;" class="min-h-screen bg-gray-50">
+        <!-- 导航栏 -->
+        <nav class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <i class="bi bi-kanban text-2xl text-indigo-600 mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-900">项目管理系统</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="userInfo" class="text-gray-600"></span>
+                        <button id="userManageBtn" onclick="showUserManagePage()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium" style="display: none;">
+                            <i class="bi bi-people mr-2"></i>用户管理
+                        </button>
+                        <button onclick="showAddProjectModal()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="bi bi-plus-circle mr-2"></i>新建项目
+                        </button>
+                        <button onclick="logout()" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg">
+                            <i class="bi bi-box-arrow-right mr-1"></i>退出
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">总项目数</p>
+                            <p id="totalProjects" class="text-3xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="p-3 bg-indigo-100 rounded-full">
+                            <i class="bi bi-folder text-indigo-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">进行中</p>
+                            <p id="activeProjects" class="text-3xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-full">
+                            <i class="bi bi-clock text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">总收入</p>
+                            <p id="totalRevenue" class="text-3xl font-bold text-yellow-600">¥0</p>
+                        </div>
+                        <div class="p-3 bg-yellow-100 rounded-full">
+                            <i class="bi bi-currency-dollar text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">总利润</p>
+                            <p id="totalProfit" class="text-3xl font-bold text-purple-600">¥0</p>
+                        </div>
+                        <div class="p-3 bg-purple-100 rounded-full">
+                            <i class="bi bi-graph-up text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 项目列表 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">项目列表</h2>
+                        <div id="projectFilter" class="flex items-center space-x-4" style="display: none;">
+                            <label class="text-sm font-medium text-gray-700">查看项目：</label>
+                            <select id="adminSelector" onchange="filterProjects()" class="text-sm border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="all">全部项目</option>
+                                <option value="mine">我的项目</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- 项目卡片将在这里动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建项目模态框 -->
+    <div id="addProjectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-2xl bg-white">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-gray-900">新建项目</h3>
+                <button onclick="closeAddProjectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <form id="addProjectForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">项目标题 *</label>
+                        <input type="text" name="title" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入项目标题" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">项目类型</label>
+                        <select name="type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="技术文章">技术文章</option>
+                            <option value="商业策划">商业策划</option>
+                            <option value="设计类">设计类</option>
+                            <option value="PPT制作">PPT制作</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">客户姓名</label>
+                        <input type="text" name="customer_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入客户姓名">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">写手姓名</label>
+                        <input type="text" name="writer_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入写手姓名">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">项目描述</label>
+                    <div class="relative">
+                        <textarea id="projectDescription" name="description" rows="4"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                            placeholder="描述项目需求和要求...
+
+💡 提示：
+• 可以直接粘贴图片 (Ctrl+V)
+• 可以拖拽文件到此区域
+• 支持的格式：图片(jpg,png,gif)、文档(pdf,doc,txt)"></textarea>
+                        <div class="absolute bottom-2 right-2 flex space-x-2">
+                            <button type="button" onclick="triggerFileUpload()" class="text-gray-400 hover:text-indigo-600 transition-colors">
+                                <i class="bi bi-paperclip text-lg"></i>
+                            </button>
+                            <button type="button" onclick="triggerImageUpload()" class="text-gray-400 hover:text-indigo-600 transition-colors">
+                                <i class="bi bi-image text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif" onchange="handleFileSelect(event)">
+                    <input type="file" id="imageInput" style="display: none;" multiple accept="image/*" onchange="handleImageSelect(event)">
+
+                    <!-- 上传的文件预览区域 -->
+                    <div id="uploadedFiles" class="mt-3 space-y-2 hidden">
+                        <div class="text-sm font-medium text-gray-700 mb-2">已上传的文件：</div>
+                        <div id="filesList" class="space-y-1"></div>
+                    </div>
+
+                    <!-- 图片预览区域 -->
+                    <div id="imagePreview" class="mt-3 hidden">
+                        <div class="text-sm font-medium text-gray-700 mb-2">图片预览：</div>
+                        <div id="imagesList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">截止日期</label>
+                        <input type="date" name="deadline" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">客户报价 (元)</label>
+                        <input type="number" name="client_price" step="0.01" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="1500.00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">写手价格 (元)</label>
+                        <input type="number" name="writer_price" step="0.01" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="800.00">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <button type="button" onclick="closeAddProjectModal()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        取消
+                    </button>
+                    <button type="button" onclick="addProject()" class="btn-primary text-white px-6 py-3 rounded-lg font-medium">
+                        创建项目
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 项目详情模态框 -->
+    <div id="projectDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-2xl bg-white">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-gray-900">项目详情</h3>
+                <button onclick="closeProjectDetailModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+            <div id="projectDetailContent">
+                <!-- 项目详情内容将在这里动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户管理页面 -->
+    <div id="userManagePage" style="display: none;" class="min-h-screen bg-gray-50">
+        <!-- 导航栏 -->
+        <nav class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <i class="bi bi-people text-2xl text-indigo-600 mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-900">用户管理</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showMainPageFromUserManage()" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg">
+                            <i class="bi bi-arrow-left mr-1"></i>返回
+                        </button>
+                        <button onclick="showAddUserModal()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="bi bi-person-plus mr-2"></i>新增用户
+                        </button>
+                        <button onclick="logout()" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg">
+                            <i class="bi bi-box-arrow-right mr-1"></i>退出
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 用户列表 -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">系统用户</h2>
+                </div>
+                <div class="p-6">
+                    <div id="usersList">
+                        <!-- 用户列表将在这里动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增用户模态框 -->
+    <div id="addUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-2xl bg-white">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-gray-900">新增用户</h3>
+                <button onclick="closeAddUserModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <form id="addUserForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">用户名 *</label>
+                    <input type="text" name="username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入用户名" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">邮箱 *</label>
+                    <input type="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入邮箱" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">角色 *</label>
+                    <select name="role" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        <option value="">选择角色</option>
+                        <option value="superadmin">超级管理员</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">密码 *</label>
+                    <input type="password" name="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入密码" required>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <button type="button" onclick="closeAddUserModal()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        取消
+                    </button>
+                    <button type="button" onclick="addUser()" class="btn-primary text-white px-6 py-3 rounded-lg font-medium">
+                        创建用户
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

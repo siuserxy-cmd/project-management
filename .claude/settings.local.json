@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run init-db:*)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(sqlite3:*)",
+      "Bash(del debug-user-manage.html)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Project management system\n\nAdd complete project management system with:\n- Node.js/Express backend server\n- SQLite database integration\n- File upload functionality\n- User management features\n- Deployment scripts and documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

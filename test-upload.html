@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试文件上传</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-xl font-bold mb-4">测试文件上传功能</h1>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">选择文件：</label>
+            <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">粘贴测试区域：</label>
+            <textarea id="pasteArea" placeholder="在这里粘贴图片试试 (Ctrl+V)" class="w-full p-3 border rounded-lg h-24"></textarea>
+        </div>
+
+        <button onclick="testUpload()" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+            测试上传
+        </button>
+
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+        });
+
+        document.getElementById('pasteArea').addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.indexOf('image') !== -1) {
+                    const file = item.getAsFile();
+                    selectedFiles.push(file);
+                    updateFileList();
+
+                    const currentValue = this.value;
+                    this.value = currentValue + (currentValue ? '\n' : '') + `📷 已添加图片: ${file.name}`;
+                }
+            }
+        });
+
+        function updateFileList() {
+            const result = document.getElementById('result');
+            if (selectedFiles.length > 0) {
+                result.innerHTML = `
+                    <h3 class="font-semibold mb-2">已选择的文件：</h3>
+                    <ul class="text-sm space-y-1">
+                        ${selectedFiles.map(file => `
+                            <li class="flex justify-between">
+                                <span>${file.name}</span>
+                                <span class="text-gray-500">${formatFileSize(file.size)}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+        }
+
+        async function testUpload() {
+            if (selectedFiles.length === 0) {
+                alert('请先选择文件');
+                return;
+            }
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                            <h3 class="font-semibold">上传成功！</h3>
+                            <pre class="text-sm mt-2">${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            <h3 class="font-semibold">上传失败：</h3>
+                            <p class="text-sm">${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <h3 class="font-semibold">网络错误：</h3>
+                        <p class="text-sm">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

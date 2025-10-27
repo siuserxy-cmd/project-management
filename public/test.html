@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>项目创建测试</title>
+</head>
+<body>
+    <h1>项目创建测试</h1>
+
+    <form id="testForm">
+        <div>
+            <label>项目标题:</label>
+            <input type="text" id="title" value="测试项目" required>
+        </div>
+        <div>
+            <label>项目类型:</label>
+            <select id="type">
+                <option value="技术文章">技术文章</option>
+                <option value="商业策划">商业策划</option>
+            </select>
+        </div>
+        <div>
+            <label>客户姓名:</label>
+            <input type="text" id="customer_name" value="测试客户">
+        </div>
+        <div>
+            <label>写手姓名:</label>
+            <input type="text" id="writer_name" value="测试写手">
+        </div>
+        <div>
+            <label>项目描述:</label>
+            <textarea id="description">这是一个测试项目</textarea>
+        </div>
+        <div>
+            <label>客户报价:</label>
+            <input type="number" id="client_price" value="1000">
+        </div>
+        <div>
+            <label>写手价格:</label>
+            <input type="number" id="writer_price" value="600">
+        </div>
+        <button type="button" onclick="testCreateProject()">创建项目</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        async function testCreateProject() {
+            const projectData = {
+                title: document.getElementById('title').value,
+                type: document.getElementById('type').value,
+                customer_name: document.getElementById('customer_name').value,
+                writer_name: document.getElementById('writer_name').value,
+                description: document.getElementById('description').value,
+                client_price: parseFloat(document.getElementById('client_price').value) || 0,
+                writer_price: parseFloat(document.getElementById('writer_price').value) || 0
+            };
+
+            console.log('发送数据:', projectData);
+
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(projectData)
+                });
+
+                const result = await response.json();
+                console.log('响应:', result);
+
+                document.getElementById('result').innerHTML =
+                    '<h3>结果:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+
+                if (response.ok) {
+                    alert('项目创建成功！');
+                } else {
+                    alert('创建失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('错误:', error);
+                document.getElementById('result').innerHTML =
+                    '<h3>错误:</h3><pre>' + error.message + '</pre>';
+                alert('网络错误: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
