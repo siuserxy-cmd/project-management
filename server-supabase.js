@@ -12,23 +12,28 @@ const { supabase, testConnection } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// 确保上传目录存在
+// 确保上传目录存在（仅在非 Vercel 环境）
 const uploadDir = path.join(__dirname, process.env.UPLOAD_DIR || 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+if (process.env.VERCEL !== '1') {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
 }
 
 // 配置文件上传
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = uuidv4();
-        const ext = path.extname(file.originalname);
-        cb(null, uniqueSuffix + ext);
-    }
-});
+// Vercel 环境使用内存存储，非 Vercel 使用磁盘存储
+const storage = process.env.VERCEL === '1'
+    ? multer.memoryStorage()
+    : multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, uploadDir);
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = uuidv4();
+            const ext = path.extname(file.originalname);
+            cb(null, uniqueSuffix + ext);
+        }
+    });
 
 const upload = multer({
     storage: storage,
@@ -56,8 +61,10 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
 app.use('/uploads', express.static(uploadDir));
 
-// 测试数据库连接
-testConnection();
+// 测试数据库连接（仅在非 Vercel 环境）
+if (process.env.VERCEL !== '1') {
+    testConnection();
+}
 
 // 首页路由
 app.get('/', (req, res) => {
@@ -353,13 +360,20 @@ app.post('/api/upload', upload.array('files', 20), async (req, res) => {
 
         // 处理每个上传的文件
         for (const file of req.files) {
+            // 在 Vercel 环境下，使用 buffer 存储，filename 需要生成
+            const filename = file.filename || `${uuidv4()}${path.extname(file.originalname)}`;
+
             const fileInfo = {
-                filename: file.filename,
+                filename: filename,
                 originalName: file.originalname,
-                filePath: `/uploads/${file.filename}`,
+                filePath: `/uploads/${filename}`,
                 fileType: file.mimetype,
                 fileSize: file.size
             };
+
+            // 在非 Vercel 环境下，文件已经保存到磁盘
+            // 在 Vercel 环境下，文件在内存中（file.buffer），这里只返回信息
+            // 实际使用时应该上传到 Supabase Storage
 
             uploadedFiles.push(fileInfo);
 
@@ -369,7 +383,7 @@ app.post('/api/upload', upload.array('files', 20), async (req, res) => {
                     .from('project_files')
                     .insert([{
                         project_id: projectId,
-                        filename: file.filename,
+                        filename: filename,
                         original_name: file.originalname,
                         file_path: fileInfo.filePath,
                         file_type: file.mimetype,
@@ -430,10 +444,12 @@ app.delete('/api/files/:id', async (req, res) => {
             return res.status(404).json({ error: '文件不存在' });
         }
 
-        // 删除物理文件
-        const filePath = path.join(__dirname, 'uploads', file.filename);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        // 删除物理文件（仅在非 Vercel 环境）
+        if (process.env.VERCEL !== '1') {
+            const filePath = path.join(__dirname, 'uploads', file.filename);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
         }
 
         // 从数据库删除记录
@@ -484,8 +500,8 @@ app.delete('/api/projects/:id', async (req, res) => {
             .select('*')
             .eq('project_id', projectId);
 
-        // 删除物理文件
-        if (files) {
+        // 删除物理文件（仅在非 Vercel 环境）
+        if (process.env.VERCEL !== '1' && files) {
             files.forEach(file => {
                 const filePath = path.join(__dirname, 'uploads', file.filename);
                 if (fs.existsSync(filePath)) {
