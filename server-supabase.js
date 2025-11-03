@@ -339,6 +339,11 @@ app.post('/api/writers', async (req, res) => {
 // 文件上传接口
 app.post('/api/upload', upload.array('files', 20), async (req, res) => {
     try {
+        // Vercel 环境警告
+        if (process.env.VERCEL === '1') {
+            console.warn('警告: 在 Vercel 上，上传的文件会在服务重启后丢失。建议使用 Supabase Storage。');
+        }
+
         const projectId = req.body.projectId;
         const uploadedFiles = [];
 

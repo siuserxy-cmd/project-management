@@ -1,0 +1,41 @@
+# Vercel 忽略文件
+
+# 数据库文件
+database.db
+*.db
+
+# 上传的文件（Vercel 上会丢失，不需要部署）
+uploads/*
+!uploads/.gitkeep
+
+# 开发文件
+node_modules
+.env.local
+.env.development
+
+# SQLite 版本（不在 Vercel 上使用）
+server-sqlite.js
+
+# 日志
+logs
+*.log
+npm-debug.log*
+
+# 临时文件
+*.tmp
+tmp/
+temp/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
