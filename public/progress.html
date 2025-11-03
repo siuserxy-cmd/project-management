@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目进度详情 - 项目管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .status-waiting {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-left: 4px solid #64748b;
+        }
+        .status-writing {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border-left: 4px solid #7c3aed;
+        }
+        .status-delivered {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid #059669;
+        }
+        .status-settled {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 4px solid #2563eb;
+        }
+
+        .progress-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .progress-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-item {
+            transition: all 0.2s ease;
+        }
+
+        .project-item:hover {
+            background-color: #f9fafb;
+            transform: translateX(5px);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-number {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .mini-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="bi bi-bar-chart-line text-2xl text-indigo-600 mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">项目进度详情</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userInfo" class="text-gray-600"></span>
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg">
+                        <i class="bi bi-arrow-left mr-1"></i>返回首页
+                    </a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg">
+                        <i class="bi bi-box-arrow-right mr-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 总览统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- 待接单 -->
+            <div class="progress-card bg-white rounded-xl shadow-lg p-6 status-waiting" onclick="scrollToSection('waiting')">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">待接单</p>
+                        <p class="stats-number text-gray-700" id="waitingCount">0</p>
+                    </div>
+                    <div class="p-4 bg-gray-200 rounded-full">
+                        <i class="bi bi-hourglass-split text-gray-600 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <p>总金额: <span class="font-semibold" id="waitingAmount">¥0</span></p>
+                </div>
+            </div>
+
+            <!-- 写作中 -->
+            <div class="progress-card bg-white rounded-xl shadow-lg p-6 status-writing" onclick="scrollToSection('writing')">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm font-medium text-purple-700 mb-1">写作中</p>
+                        <p class="stats-number text-purple-700" id="writingCount">0</p>
+                    </div>
+                    <div class="p-4 bg-purple-200 rounded-full">
+                        <i class="bi bi-pencil-square text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="text-sm text-purple-700">
+                    <p>总金额: <span class="font-semibold" id="writingAmount">¥0</span></p>
+                </div>
+            </div>
+
+            <!-- 已交稿 -->
+            <div class="progress-card bg-white rounded-xl shadow-lg p-6 status-delivered" onclick="scrollToSection('delivered')">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm font-medium text-green-700 mb-1">已交稿</p>
+                        <p class="stats-number text-green-700" id="deliveredCount">0</p>
+                    </div>
+                    <div class="p-4 bg-green-200 rounded-full">
+                        <i class="bi bi-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="text-sm text-green-700">
+                    <p>总金额: <span class="font-semibold" id="deliveredAmount">¥0</span></p>
+                </div>
+            </div>
+
+            <!-- 已结款 -->
+            <div class="progress-card bg-white rounded-xl shadow-lg p-6 status-settled" onclick="scrollToSection('settled')">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm font-medium text-blue-700 mb-1">已结款</p>
+                        <p class="stats-number text-blue-700" id="settledCount">0</p>
+                    </div>
+                    <div class="p-4 bg-blue-200 rounded-full">
+                        <i class="bi bi-currency-dollar text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="text-sm text-blue-700">
+                    <p>总收入: <span class="font-semibold" id="settledRevenue">¥0</span></p>
+                    <p>总利润: <span class="font-semibold" id="settledProfit">¥0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详细项目列表 -->
+        <!-- 待接单项目 -->
+        <div id="waiting" class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-hourglass-split text-gray-600 mr-2"></i>
+                            待接单项目
+                        </h2>
+                        <span class="mini-badge bg-gray-200 text-gray-700" id="waitingBadge">0</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="waitingProjects" class="space-y-3">
+                        <!-- 项目列表动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 写作中项目 -->
+        <div id="writing" class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-purple-50 border-b border-purple-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-pencil-square text-purple-600 mr-2"></i>
+                            写作中项目
+                        </h2>
+                        <span class="mini-badge bg-purple-200 text-purple-700" id="writingBadge">0</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="writingProjects" class="space-y-3">
+                        <!-- 项目列表动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 已交稿项目 -->
+        <div id="delivered" class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-green-50 border-b border-green-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-check-circle text-green-600 mr-2"></i>
+                            已交稿项目
+                        </h2>
+                        <span class="mini-badge bg-green-200 text-green-700" id="deliveredBadge">0</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="deliveredProjects" class="space-y-3">
+                        <!-- 项目列表动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 已结款项目 -->
+        <div id="settled" class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-blue-50 border-b border-blue-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-currency-dollar text-blue-600 mr-2"></i>
+                            已结款项目
+                        </h2>
+                        <span class="mini-badge bg-blue-200 text-blue-700" id="settledBadge">0</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="settledProjects" class="space-y-3">
+                        <!-- 项目列表动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目详情弹窗 -->
+    <div id="projectDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-2xl bg-white max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-gray-900" id="modalProjectTitle">项目详情</h3>
+                <button onclick="closeProjectDetail()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 项目基本信息 -->
+            <div id="projectBasicInfo" class="bg-gray-50 rounded-lg p-6 mb-6">
+                <!-- 动态加载项目基本信息 -->
+            </div>
+
+            <!-- 需求沟通记录 -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-chat-dots text-indigo-600 mr-2"></i>
+                        需求沟通记录
+                    </h4>
+                    <button onclick="showAddNoteForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i class="bi bi-plus-circle mr-1"></i>添加记录
+                    </button>
+                </div>
+
+                <!-- 添加记录表单 -->
+                <div id="addNoteForm" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <textarea id="noteContent" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none" placeholder="输入沟通内容..."></textarea>
+                    <div class="flex justify-end space-x-3 mt-3">
+                        <button onclick="cancelAddNote()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                            取消
+                        </button>
+                        <button onclick="saveNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium">
+                            保存
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 沟通记录列表 -->
+                <div id="communicationNotes" class="space-y-3">
+                    <!-- 动态加载沟通记录 -->
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-gray-200">
+                <button onclick="closeProjectDetail()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let currentUser = null;
+
+        // 页面加载时检查登录状态
+        window.onload = function() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = JSON.parse(userStr);
+            document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role === 'superadmin' ? '超级管理员' : '管理员'})`;
+
+            loadProgressData();
+        };
+
+        // 加载进度数据
+        async function loadProgressData() {
+            try {
+                // 根据用户角色决定是否查看所有项目
+                const viewAll = currentUser.role === 'superadmin';
+                const url = viewAll
+                    ? `${API_BASE}/projects?viewAll=true`
+                    : `${API_BASE}/projects?userId=${currentUser.id}`;
+
+                const response = await fetch(url);
+                const projects = await response.json();
+
+                // 按状态分组
+                const grouped = {
+                    '待接单': [],
+                    '写作中': [],
+                    '已交稿': [],
+                    '已结款': []
+                };
+
+                projects.forEach(project => {
+                    if (grouped[project.status]) {
+                        grouped[project.status].push(project);
+                    }
+                });
+
+                // 更新统计数据
+                updateStats(grouped);
+
+                // 渲染各状态的项目列表
+                renderProjectList('waiting', grouped['待接单']);
+                renderProjectList('writing', grouped['写作中']);
+                renderProjectList('delivered', grouped['已交稿']);
+                renderProjectList('settled', grouped['已结款']);
+
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                alert('加载数据失败，请刷新页面重试');
+            }
+        }
+
+        // 更新统计数据
+        function updateStats(grouped) {
+            // 待接单
+            const waitingProjects = grouped['待接单'];
+            document.getElementById('waitingCount').textContent = waitingProjects.length;
+            document.getElementById('waitingBadge').textContent = waitingProjects.length;
+            const waitingAmount = waitingProjects.reduce((sum, p) => sum + (parseFloat(p.client_price) || 0), 0);
+            document.getElementById('waitingAmount').textContent = `¥${waitingAmount.toFixed(2)}`;
+
+            // 写作中
+            const writingProjects = grouped['写作中'];
+            document.getElementById('writingCount').textContent = writingProjects.length;
+            document.getElementById('writingBadge').textContent = writingProjects.length;
+            const writingAmount = writingProjects.reduce((sum, p) => sum + (parseFloat(p.client_price) || 0), 0);
+            document.getElementById('writingAmount').textContent = `¥${writingAmount.toFixed(2)}`;
+
+            // 已交稿
+            const deliveredProjects = grouped['已交稿'];
+            document.getElementById('deliveredCount').textContent = deliveredProjects.length;
+            document.getElementById('deliveredBadge').textContent = deliveredProjects.length;
+            const deliveredAmount = deliveredProjects.reduce((sum, p) => sum + (parseFloat(p.client_price) || 0), 0);
+            document.getElementById('deliveredAmount').textContent = `¥${deliveredAmount.toFixed(2)}`;
+
+            // 已结款
+            const settledProjects = grouped['已结款'];
+            document.getElementById('settledCount').textContent = settledProjects.length;
+            document.getElementById('settledBadge').textContent = settledProjects.length;
+            const settledRevenue = settledProjects.reduce((sum, p) => sum + (parseFloat(p.client_price) || 0), 0);
+            const settledProfit = settledProjects.reduce((sum, p) => sum + ((parseFloat(p.client_price) || 0) - (parseFloat(p.writer_price) || 0)), 0);
+            document.getElementById('settledRevenue').textContent = `¥${settledRevenue.toFixed(2)}`;
+            document.getElementById('settledProfit').textContent = `¥${settledProfit.toFixed(2)}`;
+        }
+
+        // 渲染项目列表
+        function renderProjectList(status, projects) {
+            const container = document.getElementById(`${status}Projects`);
+
+            if (projects.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">暂无项目</p>';
+                return;
+            }
+
+            container.innerHTML = projects.map(project => {
+                const profit = (parseFloat(project.client_price) || 0) - (parseFloat(project.writer_price) || 0);
+                const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('zh-CN') : '未设置';
+
+                return `
+                    <div class="project-item border border-gray-200 rounded-lg p-4 hover:shadow-md cursor-pointer" onclick="showProjectDetail(${project.id})">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-900 text-lg mb-2">${project.title}</h3>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">项目类型：</span>
+                                        <span class="text-gray-700 font-medium">${project.type || '未设置'}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">截止日期：</span>
+                                        <span class="text-gray-700 font-medium">${deadline}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">客户：</span>
+                                        <span class="text-gray-700 font-medium">${project.customer_name || '未设置'}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">写手：</span>
+                                        <span class="text-gray-700 font-medium">${project.writer_name || '未设置'}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">客户报价：</span>
+                                        <span class="text-green-600 font-semibold">¥${(parseFloat(project.client_price) || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">写手价格：</span>
+                                        <span class="text-orange-600 font-semibold">¥${(parseFloat(project.writer_price) || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">预计利润：</span>
+                                        <span class="text-purple-600 font-semibold">¥${profit.toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">创建者：</span>
+                                        <span class="text-gray-700 font-medium">${project.creator_name || '未知'}</span>
+                                    </div>
+                                </div>
+                                ${project.description ? `
+                                    <div class="mt-3 text-sm">
+                                        <span class="text-gray-500">项目描述：</span>
+                                        <p class="text-gray-700 mt-1">${project.description}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="ml-4 flex flex-col items-end">
+                                <span class="text-xs text-gray-400">#${project.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 滚动到指定区域
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // 当前查看的项目ID
+        let currentProjectId = null;
+
+        // 显示项目详情
+        async function showProjectDetail(projectId) {
+            currentProjectId = projectId;
+
+            try {
+                // 获取项目详情
+                const viewAll = currentUser.role === 'superadmin';
+                const url = viewAll
+                    ? `${API_BASE}/projects?viewAll=true`
+                    : `${API_BASE}/projects?userId=${currentUser.id}`;
+
+                const response = await fetch(url);
+                const projects = await response.json();
+                const project = projects.find(p => p.id === projectId);
+
+                if (!project) {
+                    alert('项目不存在');
+                    return;
+                }
+
+                // 显示项目基本信息
+                document.getElementById('modalProjectTitle').textContent = project.title;
+
+                const profit = (parseFloat(project.client_price) || 0) - (parseFloat(project.writer_price) || 0);
+                const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('zh-CN') : '未设置';
+
+                document.getElementById('projectBasicInfo').innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500 font-medium">项目状态：</span>
+                            <span class="text-gray-900 font-semibold">${project.status}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">项目类型：</span>
+                            <span class="text-gray-900">${project.type || '未设置'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">截止日期：</span>
+                            <span class="text-gray-900">${deadline}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">创建者：</span>
+                            <span class="text-gray-900">${project.creator_name || '未知'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">客户：</span>
+                            <span class="text-gray-900">${project.customer_name || '未设置'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">写手：</span>
+                            <span class="text-gray-900">${project.writer_name || '未设置'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">客户报价：</span>
+                            <span class="text-green-600 font-semibold">¥${(parseFloat(project.client_price) || 0).toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">写手价格：</span>
+                            <span class="text-orange-600 font-semibold">¥${(parseFloat(project.writer_price) || 0).toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">预计利润：</span>
+                            <span class="text-purple-600 font-semibold">¥${profit.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    ${project.description ? `
+                        <div class="mt-4">
+                            <span class="text-gray-500 font-medium">项目描述：</span>
+                            <p class="text-gray-900 mt-2 whitespace-pre-wrap">${project.description}</p>
+                        </div>
+                    ` : ''}
+                `;
+
+                // 加载沟通记录
+                await loadCommunicationNotes(projectId);
+
+                // 显示弹窗
+                document.getElementById('projectDetailModal').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('加载项目详情失败:', error);
+                alert('加载项目详情失败');
+            }
+        }
+
+        // 加载沟通记录
+        async function loadCommunicationNotes(projectId) {
+            try {
+                const response = await fetch(`${API_BASE}/projects/${projectId}/notes`);
+                const notes = await response.json();
+
+                const container = document.getElementById('communicationNotes');
+
+                if (notes.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">暂无沟通记录</p>';
+                    return;
+                }
+
+                container.innerHTML = notes.map(note => {
+                    const time = new Date(note.created_at).toLocaleString('zh-CN');
+                    return `
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm font-medium text-indigo-600">${note.creator_name || currentUser.username}</span>
+                                <span class="text-xs text-gray-400">${time}</span>
+                            </div>
+                            <p class="text-gray-700 whitespace-pre-wrap">${note.content}</p>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('加载沟通记录失败:', error);
+                document.getElementById('communicationNotes').innerHTML = '<p class="text-red-500 text-center py-4">加载失败</p>';
+            }
+        }
+
+        // 关闭项目详情
+        function closeProjectDetail() {
+            document.getElementById('projectDetailModal').classList.add('hidden');
+            document.getElementById('addNoteForm').classList.add('hidden');
+            document.getElementById('noteContent').value = '';
+            currentProjectId = null;
+        }
+
+        // 显示添加记录表单
+        function showAddNoteForm() {
+            document.getElementById('addNoteForm').classList.remove('hidden');
+            document.getElementById('noteContent').focus();
+        }
+
+        // 取消添加记录
+        function cancelAddNote() {
+            document.getElementById('addNoteForm').classList.add('hidden');
+            document.getElementById('noteContent').value = '';
+        }
+
+        // 保存沟通记录
+        async function saveNote() {
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!content) {
+                alert('请输入沟通内容');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/projects/${currentProjectId}/notes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        created_by: currentUser.id
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // 清空表单
+                    document.getElementById('noteContent').value = '';
+                    document.getElementById('addNoteForm').classList.add('hidden');
+
+                    // 重新加载沟通记录
+                    await loadCommunicationNotes(currentProjectId);
+                } else {
+                    alert(result.error || '保存失败');
+                }
+
+            } catch (error) {
+                console.error('保存沟通记录失败:', error);
+                alert('保存失败，请重试');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

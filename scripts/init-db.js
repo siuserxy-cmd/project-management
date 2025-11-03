@@ -95,6 +95,19 @@ db.serialize(() => {
         )
     `);
 
+    // 项目沟通记录表
+    db.run(`
+        CREATE TABLE IF NOT EXISTS project_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_by INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id),
+            FOREIGN KEY (created_by) REFERENCES users (id)
+        )
+    `);
+
     // 插入一些示例数据
     console.log('插入示例数据...');
 

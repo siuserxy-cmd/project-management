@@ -641,6 +641,90 @@ app.put('/api/users/:id', (req, res) => {
     });
 });
 
+// 获取项目沟通记录
+app.get('/api/projects/:id/notes', (req, res) => {
+    const projectId = req.params.id;
+    const sql = `
+        SELECT n.*, u.username as creator_name
+        FROM project_notes n
+        LEFT JOIN users u ON n.created_by = u.id
+        WHERE n.project_id = ?
+        ORDER BY n.created_at DESC
+    `;
+
+    db.all(sql, [projectId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// 添加项目沟通记录
+app.post('/api/projects/:id/notes', (req, res) => {
+    const projectId = req.params.id;
+    const { content, created_by } = req.body;
+
+    if (!content || !content.trim()) {
+        return res.status(400).json({ error: '沟通内容不能为空' });
+    }
+
+    if (!created_by) {
+        return res.status(400).json({ error: '创建者ID不能为空' });
+    }
+
+    const sql = `
+        INSERT INTO project_notes (project_id, content, created_by, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+    `;
+
+    db.run(sql, [projectId, content.trim(), created_by], function(err) {
+        if (err) {
+            console.error('保存沟通记录失败:', err);
+            return res.status(500).json({ error: '保存失败: ' + err.message });
+        }
+        res.json({ id: this.lastID, message: '沟通记录保存成功' });
+    });
+});
+
+// 删除项目沟通记录
+app.delete('/api/projects/:projectId/notes/:noteId', (req, res) => {
+    const { projectId, noteId } = req.params;
+    const userId = req.query.userId;
+    const userRole = req.query.userRole;
+
+    // 权限检查
+    if (userRole !== 'superadmin') {
+        db.get('SELECT created_by FROM project_notes WHERE id = ?', [noteId], (err, note) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            if (!note) {
+                return res.status(404).json({ error: '记录不存在' });
+            }
+            if (note.created_by !== parseInt(userId)) {
+                return res.status(403).json({ error: '您只能删除自己创建的记录' });
+            }
+            performDelete();
+        });
+    } else {
+        performDelete();
+    }
+
+    function performDelete() {
+        const sql = 'DELETE FROM project_notes WHERE id = ? AND project_id = ?';
+        db.run(sql, [noteId, projectId], function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ error: '记录不存在' });
+            }
+            res.json({ message: '记录删除成功' });
+        });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`项目管理系统运行在 http://localhost:${PORT}`);
 });
