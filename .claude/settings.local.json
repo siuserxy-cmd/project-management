@@ -35,7 +35,8 @@
       "Bash(timeout /t 3)",
       "Bash(npm run start:sqlite:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []
