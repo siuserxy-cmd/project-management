@@ -36,7 +36,8 @@
       "Bash(npm run start:sqlite:*)",
       "Bash(npm run build:*)",
       "Bash(npm run:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -261,7 +261,7 @@ app.get('/api/projects/:id/timeline', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        res.json(data);
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -279,7 +279,7 @@ app.get('/api/customers', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        res.json(data);
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -297,7 +297,7 @@ app.get('/api/writers', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        res.json(data);
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -422,7 +422,7 @@ app.get('/api/projects/:id/files', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        res.json(data);
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -608,7 +608,8 @@ app.get('/api/users', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        res.json(data);
+        // 确保返回数组，即使是空数组
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
