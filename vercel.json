@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server-supabase.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|html))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server-supabase.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server-supabase.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "VERCEL": "1"
+  }
+}

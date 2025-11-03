@@ -785,7 +785,13 @@ app.delete('/api/projects/:projectId/notes/:noteId', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`项目管理系统运行在 http://localhost:${PORT}`);
-    console.log('使用 Supabase 数据库');
-});
+// 只在非 Vercel 环境下启动服务器
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        console.log(`项目管理系统运行在 http://localhost:${PORT}`);
+        console.log('使用 Supabase 数据库');
+    });
+}
+
+// 导出 app 供 Vercel 使用
+module.exports = app;
