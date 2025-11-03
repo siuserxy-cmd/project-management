@@ -15,14 +15,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
         autoRefreshToken: false,
         persistSession: false
-    },
-    db: {
-        schema: 'public'
-    },
-    global: {
-        headers: {
-            'x-client-info': 'project-management-system'
-        }
     }
 });
 
